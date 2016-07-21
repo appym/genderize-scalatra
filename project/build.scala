@@ -1,5 +1,5 @@
 import sbt._
-import Keys._
+import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
@@ -32,7 +32,7 @@ object genderizescalatraBuild extends Build {
         "org.scalatra" %% "scalatra-json" % ScalatraVersion,
         "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % "test",
         "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
-        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container",
+        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "com.typesafe.slick" %% "slick" % "2.1.0",
         "org.json4s"   %% "json4s-jackson" % "3.4.0",
@@ -51,36 +51,28 @@ object genderizescalatraBuild extends Build {
             Some("templates")
           )
         )
-      }
-    )
-//    dockerBaseImage := "java",
-//    maintainer in Docker  := "Apratim",
-//    packageName in Docker := name.value,
-//    version in Docker     := version.value,
-//    dockerExposedPorts in Docker := Seq(8080)
-  ).enablePlugins(DockerPlugin)
+      },
+      exportJars := true,
 
-  // THE FOLLOWING SECTION IS UNUSED AS I HAD TO MANUALLY CREATE A DOCKER FILE. THIS WAS ORIGINALLY INTENDED TO MAKE
-  // SBT DOCKER PLUGIN WORK.
-  lazy val dockerSettings = Seq(
-    // Make the docker task depend on the assembly task, which generates a fat JAR file
-    docker <<= (docker dependsOn (AssemblyKeys.assembly in project)),
-    dockerfile in docker :=  {
-      val artifact = (AssemblyKeys.assemblyOutputPath in AssemblyKeys.assembly in project).value
-      val artifactTargetPath = s"/app/${artifact.name}"
-      new Dockerfile {
-        from("ubuntu")
-        maintainer("Apratim Mishra<amishra@dstsystems.com>")
-        run("apt-get", "-y", "install", "openjdk-8-jre-headless")
-        expose(8080)
-        //copy(artifact, artifactTargetPath)
-        entryPoint("sbt")
-        cmd("container:start")
-      }
-    },
-    imageNames in docker := Seq(
-      sbtdocker.ImageName(namespace = Some("genderize-scalatra"),
-        repository = "genderize-scalatra",tag = Some("0.1.0"))
+      // Make the docker task depend on the assembly task, which generates a fat JAR file
+      docker <<= (docker dependsOn AssemblyKeys.assembly),
+      dockerfile in docker :=  {
+        val artifact = (AssemblyKeys.assemblyOutputPath in AssemblyKeys.assembly).value
+        println(artifact)
+        val artifactTargetPath = s"/app/${artifact.name}"
+        println(artifactTargetPath)
+        new Dockerfile {
+          from("java:8")
+          maintainer("Apratim Mishra<amishra@dstsystems.com>")
+          expose(8080,8080)
+          //copy(artifact, artifactTargetPath)
+          add(artifact, artifactTargetPath)
+          entryPoint("java","-jar",artifactTargetPath)
+        }
+      },
+      imageNames in docker := Seq(
+        sbtdocker.ImageName(repository = "genderize-scalatra",tag = Some("0.1.0"))
+      )
     )
-  )
+  ).enablePlugins(DockerPlugin)
 }

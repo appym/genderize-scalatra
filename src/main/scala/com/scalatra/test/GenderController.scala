@@ -8,7 +8,7 @@ import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json._
 
 /**
-  * Created by dt205202 on 7/15/16.
+  * Created by Apratim Mishra on 7/15/16.
   */
 class GenderController extends GenderScalatraStack with JacksonJsonSupport {
 

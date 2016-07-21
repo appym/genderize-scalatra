@@ -1,5 +1,7 @@
 package com.scalatra.test
 
+import java.io.InputStream
+
 import com.scalatra.test.PersonDAO.Person
 
 import scala.slick.jdbc.JdbcBackend.Database
@@ -10,7 +12,7 @@ import scala.slick.driver.SQLiteDriver.simple._
 import com.github.tototoshi.csv._
 
 /**
-  * Created by dt205202 on 7/15/16.
+  * Created by Apratim Mishra on 7/15/16.
   */
 trait SlickSupport {
   import Database.dynamicSession
@@ -35,9 +37,9 @@ trait SlickSupport {
     if (!database.tableNames().contains("us_names")) {
       database("create table us_names (name text, predicted_gender text);")
     }
-    val data = CSVConverter.convert("src/main/resources/usprocessed.csv")
+    val stream : InputStream = getClass.getResourceAsStream("/usprocessed.csv")
+    val data = CSVConverter.convertSource(scala.io.Source.fromInputStream( stream ).getLines())
     PersonDAO.insertIntoTableQuery(data)
-
   }
 }
 
@@ -67,6 +69,15 @@ object CSVConverter {
     val rawList = reader.iterator.toList
     val personList = new ListBuffer[Person]
     rawList.foreach(line => personList ++= List(Person(line(0), line(4))))
+    personList.toList
+  }
+
+  def convertSource(source: Iterator[String]) = {
+    val personList = new ListBuffer[Person]
+    for (line <- source) {
+      val cols = line.split(",")
+      personList ++= List(Person(cols(0), cols(4)))
+    }
     personList.toList
   }
 }

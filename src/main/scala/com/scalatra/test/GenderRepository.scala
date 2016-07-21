@@ -5,7 +5,7 @@ import Database.dynamicSession
 import scala.slick.jdbc.StaticQuery.interpolation
 
 /**
-  * Created by dt205202 on 7/15/16.
+  * Created by Apratim Mishra on 7/15/16.
   */
 class GenderRepository extends SlickSupport {
 
